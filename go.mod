@@ -1,4 +1,4 @@
-module commonlib
+module github.com/kukayyou/commonlib
 
 go 1.13
 
