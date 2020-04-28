@@ -82,36 +82,41 @@ func InitLog(serverName, logPath string, logMaxAge, rotationTime int64, logLevel
 //调试日志
 func Debug(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	logInfo := fmt.Sprintf(format, v...)
 	Logger.Debug(msg,
-		zap.String(format, toString(v)))
+		zap.String("", toString(logInfo)))
 }
 
 //一般日志
 func Info(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	logInfo := fmt.Sprintf(format, v...)
 	Logger.Info(msg,
-		zap.String(format, toString(v)))
+		zap.String("", toString(logInfo)))
 }
 
 //告警日志
 func Warn(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	logInfo := fmt.Sprintf(format, v...)
 	Logger.Warn(msg,
-		zap.String(format, toString(v)))
+		zap.String("", toString(logInfo)))
 }
 
 //错误日志
 func Error(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	logInfo := fmt.Sprintf(format, v...)
 	Logger.Error(msg,
-		zap.String(format, toString(v)))
+		zap.String("", toString(logInfo)))
 }
 
 //致命错误日志
 func Fatal(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	logInfo := fmt.Sprintf(format, v...)
 	Logger.Fatal(msg,
-		zap.String(format, toString(v)))
+		zap.String("", toString(logInfo)))
 }
 
 // 生成rotatelogs的Logger
