@@ -25,7 +25,7 @@ logPath：日志文件保存路径
 fileMaxAge：日志保留时长
 rotationTime：按时 or 分分割文件
 */
-func InitLog(serverName, logPath string, logMaxAge, rotationTime time.Duration) {
+func InitLog(serverName, logPath string, logMaxAge, rotationTime time.Duration, logLevel int8) {
 	processName = serverName
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
 	encoder := zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
@@ -43,23 +43,37 @@ func InitLog(serverName, logPath string, logMaxAge, rotationTime time.Duration) 
 		},
 	})
 
-	// 实现两个判断日志等级的interface (其实 zapcore.*Level 自身就是 interface)
-	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.WarnLevel
-	})
-
-	warnLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.WarnLevel
-	})
+	//设置打印的日志级别
+	var logLevelEnable zapcore.LevelEnabler
+	switch logLevel {
+	case 1:
+		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl < zapcore.InfoLevel
+		})
+	case 2:
+		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= zapcore.WarnLevel
+		})
+	case 3:
+		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= zapcore.ErrorLevel
+		})
+	case 4:
+		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= zapcore.FatalLevel
+		})
+	default:
+		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl < zapcore.DebugLevel+1
+		})
+	}
 
 	// 获取 info、warn日志文件的io.Writer 抽象 getWriter() 在下方实现
-	infoWriter := getWriter(logPath, logMaxAge, rotationTime)
-	warnWriter := getWriter(logPath, logMaxAge, rotationTime)
+	logWriter := getWriter(logPath, logMaxAge, rotationTime)
 
 	// 最后创建具体的Logger
 	core := zapcore.NewTee(
-		zapcore.NewCore(encoder, zapcore.AddSync(infoWriter), infoLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(warnWriter), warnLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), logLevelEnable),
 	)
 
 	Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
