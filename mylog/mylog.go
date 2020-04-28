@@ -89,21 +89,21 @@ func InitLog() {
 				return lvl < zapcore.InfoLevel
 			})),
 		)
-		Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	case 2:
 		core := zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 				return lvl >= zapcore.WarnLevel
 			})),
 		)
-		Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	case 3:
 		core := zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 				return lvl >= zapcore.ErrorLevel
 			})),
 		)
-		Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	case 4:
 	default:
 		core := zapcore.NewTee(
