@@ -139,7 +139,7 @@ func Fatal(format string, v ...interface{}) {
 // 生成rotatelogs的Logger
 func getWriter() io.Writer {
 	hook, err := rotatelogs.New(
-		LogPath+"\\"+"%Y%m%d%H"+".log", // 没有使用go风格反人类的format格式
+		LogPath+"%Y%m%d%H", // 没有使用go风格反人类的format格式
 		rotatelogs.WithLinkName(LogPath),
 		rotatelogs.WithMaxAge(time.Duration(LogMaxAge)),          // 按配置保存n天内的日志
 		rotatelogs.WithRotationTime(time.Duration(RotationTime)), //按配置时间分割一次日志
