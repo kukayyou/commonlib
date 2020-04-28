@@ -77,15 +77,15 @@ func init() {
 	logWriter := getWriter()
 
 	// 最后创建具体的Logger
-	infoLevelEnable := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+	/*infoLevelEnable := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl < zapcore.InfoLevel
 	})
 	warnLevelEnable := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl < zapcore.InfoLevel
-	})
+	})*/
+
 	core := zapcore.NewTee(
-		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), infoLevelEnable),
-		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), warnLevelEnable),
+		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zapcore.Level(LogLevel)),
 	)
 
 	Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
