@@ -15,12 +15,8 @@ import (
 )
 
 var (
-	Logger       *zap.Logger
-	ServerName   string
-	LogPath      string
-	LogMaxAge    int64
-	RotationTime int64
-	LogLevel     int8
+	Logger      *zap.Logger
+	processName string
 )
 
 /*
@@ -29,7 +25,8 @@ logPath：日志文件保存路径
 fileMaxAge：日志保留时长
 rotationTime：按时 or 分分割文件
 */
-func InitLog() {
+func InitLog(logPath, serverName string, logMaxAge, rotationTime int64, logLevel int8) {
+	processName = serverName
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
 	encoder := zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 		MessageKey:  "msg",
@@ -47,10 +44,10 @@ func InitLog() {
 	})
 
 	// 获取 info、warn日志文件的io.Writer 抽象 getWriter() 在下方实现
-	logWriter := getWriter()
+	logWriter := getWriter(logPath, logMaxAge, rotationTime)
 
 	//设置打印的日志级别
-	/*switch LogLevel {
+	switch logLevel {
 	case 0:
 		core := zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -93,13 +90,13 @@ func InitLog() {
 			})),
 		)
 		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-	}*/
-	core := zapcore.NewTee(
+	}
+	/*core := zapcore.NewTee(
 		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 			return lvl >= zapcore.InfoLevel
 		})),
 	)
-	Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+	Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑*/
 }
 
 //调试日志
@@ -143,12 +140,12 @@ func Fatal(format string, v ...interface{}) {
 }
 
 // 生成rotatelogs的Logger
-func getWriter() io.Writer {
+func getWriter(logPath string, logMaxAge, rotationTime int64) io.Writer {
 	hook, err := rotatelogs.New(
-		LogPath+"%Y%m%d%H", // 没有使用go风格反人类的format格式
-		rotatelogs.WithLinkName(LogPath),
-		rotatelogs.WithMaxAge(time.Duration(LogMaxAge)),          // 按配置保存n天内的日志
-		rotatelogs.WithRotationTime(time.Duration(RotationTime)), //按配置时间分割一次日志
+		logPath+"%Y%m%d%H", // 没有使用go风格反人类的format格式
+		rotatelogs.WithLinkName(logPath),
+		rotatelogs.WithMaxAge(time.Duration(logMaxAge)),          // 按配置保存n天内的日志
+		rotatelogs.WithRotationTime(time.Duration(rotationTime)), //按配置时间分割一次日志
 	)
 
 	if err != nil {
@@ -232,7 +229,7 @@ func getRequestId() string {
 
 //获取server进程名
 func getProcName() string {
-	return ServerName
+	return processName
 }
 
 //获取goroutine id
