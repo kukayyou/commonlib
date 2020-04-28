@@ -84,11 +84,37 @@ func init() {
 		return lvl < zapcore.InfoLevel
 	})*/
 
-	core := zapcore.NewTee(
-		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zapcore.Level(LogLevel)),
-	)
-
-	Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+	switch LogLevel {
+	case 1:
+		core := zapcore.NewTee(
+			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+				return lvl < zapcore.InfoLevel
+			})),
+		)
+		Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+	case 2:
+		core := zapcore.NewTee(
+			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+				return lvl >= zapcore.WarnLevel
+			})),
+		)
+		Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+	case 3:
+		core := zapcore.NewTee(
+			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+				return lvl >= zapcore.ErrorLevel
+			})),
+		)
+		Logger = zap.New(core, zap.AddCaller()) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+	case 4:
+	default:
+		core := zapcore.NewTee(
+			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+				return lvl < zapcore.InfoLevel
+			})),
+		)
+		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+	}
 }
 
 //调试日志
@@ -96,7 +122,7 @@ func Debug(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	Logger.Debug(msg,
-		zap.String("", toString(logInfo)))
+		zap.String("[D]", toString(logInfo)))
 }
 
 //一般日志
@@ -104,7 +130,7 @@ func Info(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	Logger.Info(msg,
-		zap.String("", toString(logInfo)))
+		zap.String("[I]", toString(logInfo)))
 }
 
 //告警日志
@@ -112,7 +138,7 @@ func Warn(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	Logger.Warn(msg,
-		zap.String("", toString(logInfo)))
+		zap.String("[W]", toString(logInfo)))
 }
 
 //错误日志
@@ -120,7 +146,7 @@ func Error(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	Logger.Error(msg,
-		zap.String("", toString(logInfo)))
+		zap.String("[E]", toString(logInfo)))
 }
 
 //致命错误日志
@@ -128,7 +154,7 @@ func Fatal(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	Logger.Fatal(msg,
-		zap.String("", toString(logInfo)))
+		zap.String("[F]", toString(logInfo)))
 }
 
 // 生成rotatelogs的Logger
