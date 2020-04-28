@@ -21,7 +21,6 @@ var (
 	LogMaxAge    int64
 	RotationTime int64
 	LogLevel     int8
-	processName  string
 )
 
 /*
@@ -30,8 +29,7 @@ logPath：日志文件保存路径
 fileMaxAge：日志保留时长
 rotationTime：按时 or 分分割文件
 */
-func init() {
-	processName = ServerName
+func InitLog() {
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
 	encoder := zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 		MessageKey:  "msg",
@@ -247,7 +245,7 @@ func getRequestId() string {
 
 //获取server进程名
 func getProcName() string {
-	return processName
+	return ServerName
 }
 
 //获取goroutine id
