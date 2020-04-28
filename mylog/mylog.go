@@ -25,7 +25,7 @@ logPath：日志文件保存路径
 fileMaxAge：日志保留时长
 rotationTime：按时 or 分分割文件
 */
-func InitLog(serverName, logPath string, logMaxAge, rotationTime time.Duration, logLevel int8) {
+func InitLog(serverName, logPath string, logMaxAge, rotationTime int64, logLevel int8) {
 	processName = serverName
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
 	encoder := zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
@@ -115,12 +115,12 @@ func Fatal(format string, v ...interface{}) {
 }
 
 // 生成rotatelogs的Logger
-func getWriter(filePath string, logMaxAge, rotationTime time.Duration) io.Writer {
+func getWriter(filePath string, logMaxAge, rotationTime int64) io.Writer {
 	hook, err := rotatelogs.New(
 		filePath+"/%Y%m%d%H.log", // 没有使用go风格反人类的format格式
 		rotatelogs.WithLinkName(filePath),
-		rotatelogs.WithMaxAge(logMaxAge),          // 按配置保存n天内的日志
-		rotatelogs.WithRotationTime(rotationTime), //按配置时间分割一次日志
+		rotatelogs.WithMaxAge(time.Duration(logMaxAge)),          // 按配置保存n天内的日志
+		rotatelogs.WithRotationTime(time.Duration(rotationTime)), //按配置时间分割一次日志
 	)
 
 	if err != nil {
