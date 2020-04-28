@@ -52,15 +52,15 @@ func InitLog(serverName, logPath string, logMaxAge, rotationTime int64, logLevel
 		})
 	case 2:
 		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl >= zapcore.WarnLevel
+			return lvl < zapcore.WarnLevel
 		})
 	case 3:
 		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl >= zapcore.ErrorLevel
+			return lvl < zapcore.ErrorLevel
 		})
 	case 4:
 		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl >= zapcore.FatalLevel
+			return lvl < zapcore.FatalLevel
 		})
 	default:
 		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -122,9 +122,9 @@ func Fatal(format string, v ...interface{}) {
 // 生成rotatelogs的Logger
 func getWriter(filePath string, logMaxAge, rotationTime int64) io.Writer {
 	hook, err := rotatelogs.New(
-		filePath+"/%Y%m%d%H.log", // 没有使用go风格反人类的format格式
+		filePath+"//"+"%Y%m%d%H.log", // 没有使用go风格反人类的format格式
 		rotatelogs.WithLinkName(filePath),
-		rotatelogs.WithMaxAge(time.Duration(logMaxAge)),          // 按配置保存n天内的日志
+		rotatelogs.WithMaxAge(time.Duration(logMaxAge)),  // 按配置保存n天内的日志
 		rotatelogs.WithRotationTime(time.Duration(rotationTime)), //按配置时间分割一次日志
 	)
 
