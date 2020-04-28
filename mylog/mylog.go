@@ -46,47 +46,22 @@ func InitLog() {
 		},
 	})
 
-	//设置打印的日志级别
-	/*var logLevelEnable zapcore.LevelEnabler
-	switch logLevel {
-	case 1:
-		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl < zapcore.InfoLevel
-		})
-	case 2:
-		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl < zapcore.WarnLevel
-		})
-	case 3:
-		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl < zapcore.ErrorLevel
-		})
-	case 4:
-		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl < zapcore.FatalLevel
-		})
-	default:
-		logLevelEnable = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl < zapcore.DebugLevel+1
-		})
-	}*/
-
 	// 获取 info、warn日志文件的io.Writer 抽象 getWriter() 在下方实现
 	logWriter := getWriter()
 
-	// 最后创建具体的Logger
-	/*infoLevelEnable := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.InfoLevel
-	})
-	warnLevelEnable := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.InfoLevel
-	})*/
-
+	//设置打印的日志级别
 	switch LogLevel {
+	case 0:
+		core := zapcore.NewTee(
+			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+				return lvl >= zapcore.DebugLevel
+			})),
+		)
+		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	case 1:
 		core := zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl < zapcore.InfoLevel
+				return lvl >= zapcore.InfoLevel
 			})),
 		)
 		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
@@ -105,10 +80,16 @@ func InitLog() {
 		)
 		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	case 4:
+		core := zapcore.NewTee(
+			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+				return lvl >= zapcore.FatalLevel
+			})),
+		)
+		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	default:
 		core := zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl < zapcore.InfoLevel
+				return lvl >= zapcore.InfoLevel
 			})),
 		)
 		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
