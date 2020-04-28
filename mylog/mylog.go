@@ -50,7 +50,7 @@ func InitLog() {
 	logWriter := getWriter()
 
 	//设置打印的日志级别
-	switch LogLevel {
+	/*switch LogLevel {
 	case 0:
 		core := zapcore.NewTee(
 			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -93,7 +93,13 @@ func InitLog() {
 			})),
 		)
 		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-	}
+	}*/
+	core := zapcore.NewTee(
+		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return lvl >= zapcore.InfoLevel
+		})),
+	)
+	Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 }
 
 //调试日志
