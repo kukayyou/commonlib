@@ -18,6 +18,10 @@ var (
 	processName string
 )
 
+type Log struct {
+	RequestID string `json:"requestId"`
+}
+
 /*
 serverName:server名称
 logPath：日志文件保存路径
@@ -68,28 +72,28 @@ func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapc
 
 //调试日志
 func Debug(format string, v ...interface{}) {
-	msg := fmt.Sprintf("%s %s ", getRequestId(), getGid())
+	msg := fmt.Sprintf(" %s ", getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Debug(msg, logInfo)
 }
 
 //一般日志
 func Info(format string, v ...interface{}) {
-	msg := fmt.Sprintf("%s %s ", getRequestId(), getGid())
+	msg := fmt.Sprintf(" %s ", getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Info(msg, logInfo)
 }
 
 //告警日志
 func Warn(format string, v ...interface{}) {
-	msg := fmt.Sprintf("%s %s ", getRequestId(), getGid())
+	msg := fmt.Sprintf(" %s ", getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Warn(msg, logInfo)
 }
 
 //错误日志
 func Error(format string, v ...interface{}) {
-	msg := fmt.Sprintf("%s %s ", getRequestId(), getGid())
+	msg := fmt.Sprintf(" %s ", getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Error(msg, logInfo)
 }
@@ -100,6 +104,20 @@ func Error(format string, v ...interface{}) {
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Fatal(msg, logInfo)
 }*/
+
+func (log *Log) SetRequestId() {
+	log.RequestID = createRequestId()
+}
+
+func (log *Log) GetRequestId() string {
+	return log.RequestID
+}
+
+//获取请求id
+func createRequestId() string {
+	t := time.Now()
+	return fmt.Sprintf("<requestId:%s-%s-%d.%d.%d>", getProcName(), getLocalIP(), t.Unix(), t.Nanosecond(), rand.Intn(1000))
+}
 
 //获取本机ip
 func getLocalIP() string {
@@ -133,12 +151,6 @@ func getLocalIP() string {
 		}
 	}
 	return ""
-}
-
-//获取请求id
-func getRequestId() string {
-	t := time.Now()
-	return fmt.Sprintf("<requestId:%s-%s-%d.%d.%d>", getProcName(), getLocalIP(), t.Unix(), t.Nanosecond(), rand.Intn(1000))
 }
 
 //获取server进程名
