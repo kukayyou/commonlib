@@ -43,9 +43,9 @@ func getEncoder() zapcore.Encoder {
 }
 
 func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapcore.WriteSyncer {
-	fileName := logPath + "\\" + getProcName() + ".log"
+	//fileName := logPath + "\\" + getProcName() + ".log"
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   fileName,
+		Filename:   "./orderserver.log",
 		MaxSize:    logMaxSize,
 		MaxBackups: logMaxBackUps,
 		MaxAge:     logMaxAge,
