@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	sugarLogger *zap.SugaredLogger
+	SugarLogger *zap.SugaredLogger
 	processName string
 )
 
@@ -29,10 +29,22 @@ func InitLog(logPath, serverName string, logMaxAge, logMaxSize, logMaxBackUps in
 	processName = serverName
 	writeSyncer := getLogWriter(logPath, logMaxAge, logMaxSize, logMaxBackUps)
 	encoder := getEncoder()
-	core := zapcore.NewCore(encoder, writeSyncer, zapcore.Level(logLevel))
+	var core zapcore.Core
+	switch logLevel {
+	case -1:
+		core = zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
+	case 0:
+		core = zapcore.NewCore(encoder, writeSyncer, zapcore.InfoLevel)
+	case 1:
+		core = zapcore.NewCore(encoder, writeSyncer, zapcore.WarnLevel)
+	case 2:
+		core = zapcore.NewCore(encoder, writeSyncer, zapcore.ErrorLevel)
+	case 3:
+		core = zapcore.NewCore(encoder, writeSyncer, zapcore.FatalLevel)
+	}
 
 	logger := zap.New(core)
-	sugarLogger = logger.Sugar()
+	SugarLogger = logger.Sugar()
 }
 
 func getEncoder() zapcore.Encoder {
@@ -43,9 +55,9 @@ func getEncoder() zapcore.Encoder {
 }
 
 func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapcore.WriteSyncer {
-	//fileName := logPath + "\\" + getProcName() + ".log"
+	fileName := logPath + "\\" + getProcName() + ".log"
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "./orderserver.log",
+		Filename:   fileName,
 		MaxSize:    logMaxSize,
 		MaxBackups: logMaxBackUps,
 		MaxAge:     logMaxAge,
@@ -56,37 +68,37 @@ func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapc
 
 //调试日志
 func Debug(format string, v ...interface{}) {
-	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	msg := fmt.Sprintf("requestId:%s, %s ", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	sugarLogger.Debug(msg, logInfo)
+	SugarLogger.Debug(msg, logInfo)
 }
 
 //一般日志
 func Info(format string, v ...interface{}) {
-	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	msg := fmt.Sprintf("requestId:%s, %s ", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	sugarLogger.Info(msg, logInfo)
+	SugarLogger.Info(msg, logInfo)
 }
 
 //告警日志
 func Warn(format string, v ...interface{}) {
-	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	msg := fmt.Sprintf("requestId:%s, %s ", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	sugarLogger.Warn(msg, logInfo)
+	SugarLogger.Warn(msg, logInfo)
 }
 
 //错误日志
 func Error(format string, v ...interface{}) {
-	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	msg := fmt.Sprintf("requestId:%s, %s ", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	sugarLogger.Error(msg, logInfo)
+	SugarLogger.Error(msg, logInfo)
 }
 
 //致命错误日志
 func Fatal(format string, v ...interface{}) {
-	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	msg := fmt.Sprintf("requestId:%s, %s ", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	sugarLogger.Fatal(msg, logInfo)
+	SugarLogger.Fatal(msg, logInfo)
 }
 
 //获取本机ip
