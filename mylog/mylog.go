@@ -2,14 +2,11 @@ package mylog
 
 import (
 	"fmt"
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"io"
 	"math/rand"
 	"net"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -17,7 +14,7 @@ import (
 )
 
 var (
-	Logger      *zap.Logger
+	sugarLogger *zap.SugaredLogger
 	processName string
 )
 
@@ -27,179 +24,69 @@ logPath：日志文件保存路径
 fileMaxAge：日志保留时长
 rotationTime：按时 or 分分割文件
 */
-/*func InitLog(logPath, serverName string, logMaxAge, rotationTime int64, logLevel int8) {
+
+func InitLog(logPath, serverName string, logMaxAge, logMaxSize, logMaxBackUps int, logLevel int8) {
 	processName = serverName
-	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
-	encoder := zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
-		MessageKey:  "msg",
-		LevelKey:    "level",
-		EncodeLevel: zapcore.CapitalLevelEncoder,
-		TimeKey:     "ts",
-		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendString(t.Format("2006-01-02 15:04:05"))
-		},
-		CallerKey:    "file",
-		EncodeCaller: zapcore.ShortCallerEncoder,
-		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendInt64(int64(d) / 1000000)
-		},
-	})
+	writeSyncer := getLogWriter(logPath, logMaxAge, logMaxSize, logMaxBackUps)
+	encoder := getEncoder()
+	core := zapcore.NewCore(encoder, writeSyncer, zapcore.Level(logLevel))
 
-	// 获取 info、warn日志文件的io.Writer 抽象 getWriter() 在下方实现
-	logWriter := getWriter(logPath, logMaxAge, rotationTime)
+	logger := zap.New(core)
+	sugarLogger = logger.Sugar()
+}
 
-	//设置打印的日志级别
-	switch logLevel {
-	case 0:
-		core := zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.DebugLevel
-			})),
-		)
-		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-	case 1:
-		core := zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.InfoLevel
-			})),
-		)
-		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-	case 2:
-		core := zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.WarnLevel
-			})),
-		)
-		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-	case 3:
-		core := zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.ErrorLevel
-			})),
-		)
-		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-	case 4:
-		core := zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.FatalLevel
-			})),
-		)
-		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-	default:
-		core := zapcore.NewTee(
-			zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.InfoLevel
-			})),
-		)
-		Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
+func getEncoder() zapcore.Encoder {
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	return zapcore.NewConsoleEncoder(encoderConfig)
+}
+
+func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapcore.WriteSyncer {
+	fileName := logPath + "\\" + getProcName() + ".log"
+	lumberJackLogger := &lumberjack.Logger{
+		Filename:   fileName,
+		MaxSize:    logMaxSize,
+		MaxBackups: logMaxBackUps,
+		MaxAge:     logMaxAge,
+		Compress:   false,
 	}
-	/*core := zapcore.NewTee(
-		zapcore.NewCore(encoder, zapcore.AddSync(logWriter), zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl >= zapcore.InfoLevel
-		})),
-	)
-	Logger = zap.New(core) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
-}*/
-
-func InitLog(logPath, serverName string, logMaxAge, logMaxSize int, logLevel int8) {
-	hook := lumberjack.Logger{
-		Filename:   logPath + "\\" + serverName + ".log", // 日志文件路径
-		MaxSize:    logMaxSize,                           // 每个日志文件保存的最大尺寸 单位：M
-		MaxBackups: 30,                                   // 日志文件最多保存多少个备份
-		MaxAge:     logMaxAge,                            // 文件最多保存多少天
-		Compress:   true,                                 // 是否压缩
-	}
-
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "linenum",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,  // 小写编码器
-		EncodeTime:     zapcore.ISO8601TimeEncoder,     // ISO8601 UTC 时间格式
-		EncodeDuration: zapcore.SecondsDurationEncoder, //
-		EncodeCaller:   zapcore.FullCallerEncoder,      // 全路径编码器
-		EncodeName:     zapcore.FullNameEncoder,
-	}
-
-	// 设置日志级别
-	atomicLevel := zap.NewAtomicLevel()
-	atomicLevel.SetLevel(zapcore.Level(logLevel))
-
-	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(encoderConfig),                                           // 编码器配置
-		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&hook)), // 打印到控制台和文件
-		atomicLevel, // 日志级别
-	)
-
-	// 开启开发模式，堆栈跟踪
-	caller := zap.AddCaller()
-	// 开启文件及行号
-	development := zap.Development()
-	// 设置初始化字段
-	filed := zap.Fields(zap.String("serviceName", serverName),
-		zap.String("requestId", getRequestId()),
-		zap.String("gid", getGid()))
-
-	// 构造日志
-	Logger = zap.New(core, caller, development, filed)
+	return zapcore.AddSync(lumberJackLogger)
 }
 
 //调试日志
 func Debug(format string, v ...interface{}) {
-	//msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
-	//logInfo := fmt.Sprintf(format, v...)
-	Logger.Debug(format, zap.String("[D]", toString(v)))
+	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
+	logInfo := fmt.Sprintf(format, v...)
+	sugarLogger.Debug(msg, logInfo)
 }
 
 //一般日志
 func Info(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	Logger.Info(msg,
-		zap.String("[I]", toString(logInfo)))
+	sugarLogger.Info(msg, logInfo)
 }
 
 //告警日志
 func Warn(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	Logger.Warn(msg,
-		zap.String("[W]", toString(logInfo)))
+	sugarLogger.Warn(msg, logInfo)
 }
 
 //错误日志
 func Error(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	Logger.Error(msg,
-		zap.String("[E]", toString(logInfo)))
+	sugarLogger.Error(msg, logInfo)
 }
 
 //致命错误日志
 func Fatal(format string, v ...interface{}) {
 	msg := fmt.Sprintf("requestId:%s, %s", getRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
-	Logger.Fatal(msg,
-		zap.String("[F]", toString(logInfo)))
-}
-
-// 生成rotatelogs的Logger
-func getWriter(logPath string, logMaxAge, rotationTime int64) io.Writer {
-	hook, err := rotatelogs.New(
-		logPath+"%Y%m%d%H", // 没有使用go风格反人类的format格式
-		rotatelogs.WithLinkName(logPath),
-		rotatelogs.WithMaxAge(time.Duration(logMaxAge)),          // 按配置保存n天内的日志
-		rotatelogs.WithRotationTime(time.Duration(rotationTime)), //按配置时间分割一次日志
-	)
-
-	if err != nil {
-		panic(err)
-	}
-	return hook
+	sugarLogger.Fatal(msg, logInfo)
 }
 
 //获取本机ip
@@ -231,39 +118,6 @@ func getLocalIP() string {
 					return localIP
 				}
 			}
-		}
-	}
-	return ""
-}
-
-//interface{} 转 string
-func toString(v interface{}) string {
-	if r, ok := v.(string); ok {
-		return r
-	}
-	//not string should be convert number to string
-	switch v.(type) {
-	case uint64:
-		return strconv.Itoa(int(v.(uint64)))
-	case int64:
-		return strconv.Itoa(int(v.(int64)))
-	case int:
-		return strconv.Itoa((v.(int)))
-	case int32:
-		return strconv.Itoa(int(v.(int32)))
-	case uint32:
-		return strconv.Itoa(int(v.(uint32)))
-	case float64:
-		return strconv.Itoa(int(v.(float64)))
-	case int8:
-		return strconv.Itoa(int(v.(int8)))
-	case uint8:
-		return strconv.Itoa(int(v.(uint8)))
-	case bool:
-		if v.(bool) {
-			return "true"
-		} else {
-			return "false"
 		}
 	}
 	return ""
@@ -307,6 +161,6 @@ func getGid() string {
 		}
 	}()
 	gid := goID()
-	r = fmt.Sprintf("%d", gid)
+	r = fmt.Sprintf("<gid:%d>", gid)
 	return r
 }
