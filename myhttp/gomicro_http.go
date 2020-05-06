@@ -12,9 +12,16 @@ import (
 	"github.com/micro/go-plugins/wrapper/breaker/hystrix"
 )
 
+var (
+	ConsulAddr string//consul地址：ip+port
+	DefaultSleepWindow int = 5000//重试时间窗口
+	DefaultTimeOut int = 5000//默认超时时间
+	DefaultVolumeThreshold int = 2//默认最大失败次数
+)
+
 func RequestWithHytrix(serverName, url string, req interface{})map[string]interface{}{
 	consulReg := consul.NewRegistry(
-		registry.Addrs("192.168.109.131:8500"),
+		registry.Addrs(ConsulAddr),
 	)
 
 	microselector := selector.NewSelector(
@@ -26,9 +33,9 @@ func RequestWithHytrix(serverName, url string, req interface{})map[string]interf
 		client.ContentType("application/json"),
 		client.Wrap(hystrix.NewClientWrapper()), //熔断操作
 	)
-	hystrixGo.DefaultSleepWindow = 5000//重试时间窗口
-	hystrixGo.DefaultTimeout = 5000//默认超时时间
-	hystrixGo.DefaultVolumeThreshold = 2//默认最大失败次数
+	hystrixGo.DefaultSleepWindow = DefaultSleepWindow//重试时间窗口
+	hystrixGo.DefaultTimeout = DefaultTimeOut//默认超时时间
+	hystrixGo.DefaultVolumeThreshold = DefaultVolumeThreshold//默认最大失败次数
 
 	reqInfo := microClient.NewRequest(serverName, url, req)
 	var resp map[string]interface{}
