@@ -2,8 +2,8 @@ package myhttp
 
 import (
 	"context"
-	"fmt"
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
+	"github.com/kukayyou/commonlib/mylog"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/client/selector"
 	"github.com/micro/go-micro/registry"
@@ -50,12 +50,14 @@ func RequestWithHytrix(serverName, url string, req interface{})map[string]interf
 	hystrixGo.DefaultVolumeThreshold = DefaultVolumeThreshold//默认最大失败次数
 
 	reqInfo := microClient.NewRequest(serverName, url, req)
+	mylog.Info("RegistryType:%d, serverName:%s, url:%s, req:%v", RegistryType, serverName, url, req)
 	var resp map[string]interface{}
 
-	err := microClient.Call(context.Background(), reqInfo, &resp)
-	if err == nil {
-		fmt.Println(resp)
+	if err := microClient.Call(context.Background(), reqInfo, &resp); err != nil {
+		mylog.Error("request error:%s", err.Error())
+		return nil
 	}
 
+	mylog.Error("response is:%v", resp)
 	return  resp
 }
