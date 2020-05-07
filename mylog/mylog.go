@@ -16,10 +16,10 @@ import (
 var (
 	SugarLogger *zap.SugaredLogger
 	processName string
-	log         Log
+	Log         LogInfo
 )
 
-type Log struct {
+type LogInfo struct {
 	RequestID string `json:"requestId"`
 }
 
@@ -107,18 +107,18 @@ func Error(format string, v ...interface{}) {
 }*/
 
 func SetRequestId() {
-	log.SetRequestId()
+	Log.SetRequestId()
 }
 
 func GetRequestId() string {
-	return log.GetRequestId()
+	return Log.GetRequestId()
 }
 
-func (log *Log) SetRequestId() {
+func (log *LogInfo) SetRequestId() {
 	log.RequestID = createRequestId()
 }
 
-func (log *Log) GetRequestId() string {
+func (log *LogInfo) GetRequestId() string {
 	return log.RequestID
 }
 
