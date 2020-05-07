@@ -16,6 +16,7 @@ import (
 var (
 	SugarLogger *zap.SugaredLogger
 	processName string
+	requestID   string
 )
 
 type Log struct {
@@ -72,28 +73,28 @@ func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapc
 
 //调试日志
 func Debug(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s ", getGid())
+	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Debug(msg, logInfo)
 }
 
 //一般日志
 func Info(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s ", getGid())
+	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Info(msg, logInfo)
 }
 
 //告警日志
 func Warn(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s ", getGid())
+	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Warn(msg, logInfo)
 }
 
 //错误日志
 func Error(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s ", getGid())
+	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Error(msg, logInfo)
 }
@@ -104,6 +105,14 @@ func Error(format string, v ...interface{}) {
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Fatal(msg, logInfo)
 }*/
+
+func SetRequestId() {
+	requestID = createRequestId()
+}
+
+func GetRequestId() string {
+	return requestID
+}
 
 func (log *Log) SetRequestId() {
 	log.RequestID = createRequestId()

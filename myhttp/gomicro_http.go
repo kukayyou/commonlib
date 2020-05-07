@@ -2,6 +2,7 @@ package myhttp
 
 import (
 	"context"
+	"encoding/json"
 	hystrixGo "github.com/afex/hystrix-go/hystrix"
 	"github.com/kukayyou/commonlib/mylog"
 	"github.com/micro/go-micro/client"
@@ -11,7 +12,6 @@ import (
 	microhttp "github.com/micro/go-plugins/client/http"
 	"github.com/micro/go-plugins/registry/consul"
 	"github.com/micro/go-plugins/wrapper/breaker/hystrix"
-	"encoding/json"
 )
 
 var (
