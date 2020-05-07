@@ -16,7 +16,7 @@ import (
 var (
 	SugarLogger *zap.SugaredLogger
 	processName string
-	requestID   string
+	log         Log
 )
 
 type Log struct {
@@ -107,11 +107,11 @@ func Error(format string, v ...interface{}) {
 }*/
 
 func SetRequestId() {
-	requestID = createRequestId()
+	log.SetRequestId()
 }
 
 func GetRequestId() string {
-	return requestID
+	return log.GetRequestId()
 }
 
 func (log *Log) SetRequestId() {
