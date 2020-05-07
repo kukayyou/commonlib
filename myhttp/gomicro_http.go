@@ -11,6 +11,7 @@ import (
 	microhttp "github.com/micro/go-plugins/client/http"
 	"github.com/micro/go-plugins/registry/consul"
 	"github.com/micro/go-plugins/wrapper/breaker/hystrix"
+	"encoding/json"
 )
 
 var (
@@ -36,12 +37,12 @@ func RequestWithHytrix(serverName, url string, req interface{})map[string]interf
 	default:
 	}
 
-	microselector := selector.NewSelector(
+	microSelector := selector.NewSelector(
 		selector.Registry(reg),              //传入consul注册
 		selector.SetStrategy(selector.RoundRobin), //指定查询机制
 	)
 	microClient := microhttp.NewClient(
-		client.Selector(microselector),
+		client.Selector(microSelector),
 		client.ContentType("application/json"),
 		client.Wrap(hystrix.NewClientWrapper()), //熔断操作
 	)
@@ -50,7 +51,8 @@ func RequestWithHytrix(serverName, url string, req interface{})map[string]interf
 	hystrixGo.DefaultVolumeThreshold = DefaultVolumeThreshold//默认最大失败次数
 
 	reqInfo := microClient.NewRequest(serverName, url, req)
-	mylog.Info("RegistryType:%d, serverName:%s, url:%s, req:%v", RegistryType, serverName, url, req)
+	r, _ := json.Marshal(req)
+	mylog.Info("RegistryType:%d, serverName:%s, url:%s, req:%s", RegistryType, serverName, url, string(r))
 	var resp map[string]interface{}
 
 	if err := microClient.Call(context.Background(), reqInfo, &resp); err != nil {
@@ -58,6 +60,7 @@ func RequestWithHytrix(serverName, url string, req interface{})map[string]interf
 		return nil
 	}
 
-	mylog.Error("response is:%v", resp)
+	re, _ := json.Marshal(resp)
+	mylog.Info("response is:%s", string(re))
 	return  resp
 }
