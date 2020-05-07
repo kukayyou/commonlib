@@ -22,13 +22,20 @@ type LogInfo struct {
 	RequestID string `json:"requestId"`
 }
 
+func (log *LogInfo) SetRequestId() {
+	log.RequestID = createRequestId()
+}
+
+func (log *LogInfo) GetRequestId() string {
+	return log.RequestID
+}
+
 /*
 serverName:server名称
 logPath：日志文件保存路径
 fileMaxAge：日志保留时长
 rotationTime：按时 or 分分割文件
 */
-
 func InitLog(logPath, serverName string, logMaxAge, logMaxSize, logMaxBackUps int, logLevel int8) {
 	processName = serverName
 	writeSyncer := getLogWriter(logPath, logMaxAge, logMaxSize, logMaxBackUps)
@@ -51,6 +58,41 @@ func InitLog(logPath, serverName string, logMaxAge, logMaxSize, logMaxBackUps in
 	SugarLogger = logger.Sugar()
 }
 
+//调试日志
+func Debug(format string, v ...interface{}) {
+	msg := fmt.Sprintf(" %s ", getGid())
+	logInfo := fmt.Sprintf(format, v...)
+	SugarLogger.Debug(msg, logInfo)
+}
+
+//一般日志
+func Info(format string, v ...interface{}) {
+	msg := fmt.Sprintf(" %s ", getGid())
+	logInfo := fmt.Sprintf(format, v...)
+	SugarLogger.Info(msg, logInfo)
+}
+
+//告警日志
+func Warn(format string, v ...interface{}) {
+	msg := fmt.Sprintf(" %s ", getGid())
+	logInfo := fmt.Sprintf(format, v...)
+	SugarLogger.Warn(msg, logInfo)
+}
+
+//错误日志
+func Error(format string, v ...interface{}) {
+	msg := fmt.Sprintf(" %s ", getGid())
+	logInfo := fmt.Sprintf(format, v...)
+	SugarLogger.Error(msg, logInfo)
+}
+
+//致命错误日志
+/*func Fatal(format string, v ...interface{}) {
+	msg := fmt.Sprintf("%s %s ", getRequestId(), getGid())
+	logInfo := fmt.Sprintf(format, v...)
+	SugarLogger.Fatal(msg, logInfo)
+}*/
+
 func getEncoder() zapcore.Encoder {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
@@ -70,53 +112,10 @@ func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapc
 	return zapcore.AddSync(lumberJackLogger)
 }
 
-//调试日志
-func Debug(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
-	logInfo := fmt.Sprintf(format, v...)
-	SugarLogger.Debug(msg, logInfo)
-}
-
-//一般日志
-func Info(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
-	logInfo := fmt.Sprintf(format, v...)
-	SugarLogger.Info(msg, logInfo)
-}
-
-//告警日志
-func Warn(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
-	logInfo := fmt.Sprintf(format, v...)
-	SugarLogger.Warn(msg, logInfo)
-}
-
-//错误日志
-func Error(format string, v ...interface{}) {
-	msg := fmt.Sprintf(" %s %s ", GetRequestId(), getGid())
-	logInfo := fmt.Sprintf(format, v...)
-	SugarLogger.Error(msg, logInfo)
-}
-
-//致命错误日志
-/*func Fatal(format string, v ...interface{}) {
-	msg := fmt.Sprintf("%s %s ", getRequestId(), getGid())
-	logInfo := fmt.Sprintf(format, v...)
-	SugarLogger.Fatal(msg, logInfo)
-}*/
-
-func (log *LogInfo) SetRequestId() {
-	log.RequestID = createRequestId()
-}
-
-func (log *LogInfo) GetRequestId() string {
-	return log.RequestID
-}
-
 //获取请求id
 func createRequestId() string {
 	t := time.Now()
-	return fmt.Sprintf("<requestId:%s-%s-%d.%d.%d>", getProcName(), getLocalIP(), t.Unix(), t.Nanosecond(), rand.Intn(1000))
+	return fmt.Sprintf("<%s-%s-%d.%d.%d>", getProcName(), getLocalIP(), t.Unix(), t.Nanosecond(), rand.Intn(1000))
 }
 
 //获取本机ip
