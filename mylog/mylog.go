@@ -16,7 +16,6 @@ import (
 var (
 	SugarLogger *zap.SugaredLogger
 	processName string
-	Log         LogInfo
 )
 
 type LogInfo struct {
@@ -105,14 +104,6 @@ func Error(format string, v ...interface{}) {
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Fatal(msg, logInfo)
 }*/
-
-func SetRequestId() {
-	Log.SetRequestId()
-}
-
-func GetRequestId() string {
-	return Log.GetRequestId()
-}
 
 func (log *LogInfo) SetRequestId() {
 	log.RequestID = createRequestId()
