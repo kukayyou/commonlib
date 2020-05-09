@@ -71,11 +71,11 @@ func CheckToken(tokenStr string) (*CustomClaims, error) {
 }
 
 //获取私钥
-func get() string {
+func get() []byte {
 	rwlock.RLock()
 	defer rwlock.RUnlock()
 
-	return PrivateKey
+	return []byte(PrivateKey)
 }
 
 //设置私钥
