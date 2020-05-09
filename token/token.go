@@ -18,7 +18,7 @@ type CustomClaims struct {
 // Token jwt服务
 var (
 	rwlock     sync.RWMutex
-	PrivateKey string
+	PrivateKey string = "orangetutor"
 )
 
 type UserInfo struct {
