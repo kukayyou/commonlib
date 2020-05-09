@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -19,14 +20,19 @@ var (
 )
 
 type LogInfo struct {
+	rwlock    sync.RWMutex
 	RequestID string `json:"requestId"`
 }
 
 func (log *LogInfo) SetRequestId() {
+	log.rwlock.Lock()
+	defer log.rwlock.Unlock()
 	log.RequestID = createRequestId()
 }
 
 func (log *LogInfo) GetRequestId() string {
+	log.rwlock.Lock()
+	defer log.rwlock.Unlock()
 	return log.RequestID
 }
 
