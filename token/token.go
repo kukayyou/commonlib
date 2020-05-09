@@ -1,6 +1,7 @@
 package token
 
 import (
+	"github.com/kukayyou/commonlib/mylog"
 	"github.com/micro/go-plugins/config/source/consul"
 	"log"
 	"sync"
@@ -8,7 +9,6 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	config "github.com/micro/go-micro/config"
-	//"github.com/micro/go-micro/config/source/consul"
 	"github.com/micro/go-micro/config/source/etcd"
 )
 
@@ -40,25 +40,35 @@ func (srv *Token) put(newKey []byte) {
 }
 
 // InitConfig 初始化
-func (srv *Token) InitConfig(address string, path ...string) {
-	consulSource := etcd.NewSource(
-		consul.WithAddress(address),
-		// consul.WithPrefix("/my/prefix"),
-		// consul.StripPrefix(true),
-	)
-	srv.conf = config.NewConfig()
-	err := srv.conf.Load(consulSource)
-	if err != nil {
-		log.Fatal(err)
+func (srv *Token) InitConfig(address string, regisType int, path ...string) {
+	if regisType == 0 {
+		regisSrc := etcd.NewSource(
+			consul.WithAddress(address),
+			// consul.WithPrefix("/my/prefix"),
+			// consul.StripPrefix(true),
+		)
+		srv.conf = config.NewConfig()
+		err := srv.conf.Load(regisSrc)
+		if err != nil {
+			mylog.Error("Load regis source error:%s", err.Error())
+		}
+	}else{
+		regisSrc := consul.NewSource(
+			consul.WithAddress(address),
+			// consul.WithPrefix("/my/prefix"),
+			// consul.StripPrefix(true),
+		)
+		srv.conf = config.NewConfig()
+		err := srv.conf.Load(regisSrc)
+		if err != nil {
+			mylog.Error("Load regis source error:%s", err.Error())
+		}
 	}
 
 	value := srv.conf.Get(path...).Bytes()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	srv.put(value)
-	log.Println("JWT privateKey:", string(srv.get()))
+	mylog.Info("JWT privateKey:", string(srv.get()))
 	srv.enableAutoUpdate(path...)
 }
 
@@ -76,7 +86,7 @@ func (srv *Token) enableAutoUpdate(path ...string) {
 
 			value := v.Bytes()
 			srv.put(value)
-			log.Println("New JWT privateKey:", string(srv.get()))
+			mylog.Info("New JWT privateKey:", string(srv.get()))
 		}
 	}()
 }
