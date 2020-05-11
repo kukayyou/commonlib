@@ -26,6 +26,10 @@ func (self *IniConfig) GetInt64(key string) int64 {
 	return self.GetSectionInt64("", key)
 }
 
+func (self *IniConfig) GetInt(key string) int {
+	return self.GetSectionInt("", key)
+}
+
 func (self *IniConfig) GetBool(key string) bool {
 	re, _ := self.GetSectionBool("", key)
 	return re
@@ -58,6 +62,15 @@ func (self *IniConfig) GetSectionInt64(section string, key string) int64 {
 	}
 	s := self.conf.Section(section)
 	v, _ := s.Key(key).Int64()
+	return v
+}
+
+func (self *IniConfig) GetSectionInt(section string, key string) int {
+	if self.conf == nil {
+		return 0
+	}
+	s := self.conf.Section(section)
+	v, _ := s.Key(key).Int()
 	return v
 }
 
