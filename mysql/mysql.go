@@ -1,4 +1,4 @@
-package ucmysql
+package mysql
 
 import (
 	"github.com/astaxie/beego"
