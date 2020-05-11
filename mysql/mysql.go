@@ -1,7 +1,6 @@
 package mysql
 
 import (
-	"github.com/astaxie/beego"
 	"github.com/kukayyou/commonlib/mylog"
 	"strings"
 	"time"
@@ -11,7 +10,7 @@ import (
 )
 
 func InitConnectionPool(cons int, datasrc string) bool {
-	return InitConnection(cons, int(beego.AppConfig.DefaultInt64("mysql_idle", 10)), datasrc)
+	return InitConnection(cons, 10, datasrc)
 }
 
 func InitConnection(maxopen, maxidle int, datasrc string) bool {
