@@ -121,7 +121,7 @@ func getLogWriter(logPath string, logMaxAge, logMaxSize, logMaxBackUps int) zapc
 //获取请求id
 func createRequestId() string {
 	t := time.Now()
-	return fmt.Sprintf("<%s-%s-%d.%d.%d>", getProcName(), getLocalIP(), t.Unix(), t.Nanosecond(), rand.Intn(1000))
+	return fmt.Sprintf("%s-%s-%d.%d.%d", getProcName(), getLocalIP(), t.Unix(), t.Nanosecond(), rand.Intn(1000))
 }
 
 //获取本机ip
