@@ -22,6 +22,7 @@ var (
 )
 
 type UserInfo struct {
+	UserID   int64  `json:"userId"`
 	UserName string `json:"userName"`
 	Passwd   string `json:"passwd"`
 }
