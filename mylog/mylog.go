@@ -37,7 +37,7 @@ func (log *LogInfo) SetRequestUrl(url string) {
 	log.RequestUrl = url
 }
 
-func (log *LogInfo) getRequestUrl() string {
+func (log *LogInfo) GetRequestUrl() string {
 	log.rwlock.Lock()
 	defer log.rwlock.Unlock()
 	return log.RequestUrl
