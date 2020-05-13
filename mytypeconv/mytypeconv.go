@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -691,4 +692,22 @@ func ToArray(v interface{}) []byte {
 	} else {
 		return nil
 	}
+}
+
+/*
+函数功能：interface转为map
+函数入参：
+v：待转化数据
+函数返回值：转化后的map
+*/
+func InterfaceToMap(v interface{}) map[string]interface{} {
+	re := make(map[string]interface{})
+	vt := reflect.ValueOf(v)
+	if vt.Kind() == reflect.Map {
+		for _, key := range vt.MapKeys() {
+			value := vt.MapIndex(key)
+			re[ToString(key.Interface())] = value.Interface()
+		}
+	}
+	return re
 }
