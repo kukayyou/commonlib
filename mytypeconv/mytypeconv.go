@@ -300,43 +300,38 @@ func ToBool(v interface{}, defaultVal bool) bool {
 }
 
 func ToUint64V2(v interface{}) (r uint64) {
-	r, err := ToUint64(v)
-
-	if err != nil {
-		return 0
-	}
-
-	return r
+	r = ToUint64(v)
+	return
 }
 
-func ToUint64(v interface{}) (uint64, error) {
+func ToUint64(v interface{}) uint64 {
 	switch v.(type) {
 	case bool:
 		if v.(bool) {
-			return 1, nil
+			return 1
 		}
-		return 0, nil
+		return 0
 	case string:
-		return strconv.ParseUint(v.(string), 10, 64)
+		data, _ := strconv.ParseUint(v.(string), 10, 64)
+		return data
 	case uint64:
-		return uint64(v.(uint64)), nil
+		return uint64(v.(uint64))
 	case int64:
-		return uint64(v.(int64)), nil
+		return uint64(v.(int64))
 	case int:
-		return uint64(v.(int)), nil
+		return uint64(v.(int))
 	case int32:
-		return uint64(v.(int32)), nil
+		return uint64(v.(int32))
 	case uint32:
-		return uint64(v.(uint32)), nil
+		return uint64(v.(uint32))
 	case float64:
-		return uint64(v.(float64)), nil
+		return uint64(v.(float64))
 	case int8:
-		return uint64(v.(int8)), nil
+		return uint64(v.(int8))
 	case uint8:
-		return uint64(v.(uint8)), nil
+		return uint64(v.(uint8))
 	default:
-		err := fmt.Errorf("cannot convert param to integer")
-		return 0, err
+		return 0
 	}
 }
 
