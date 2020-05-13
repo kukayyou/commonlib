@@ -20,14 +20,27 @@ var (
 )
 
 type LogInfo struct {
-	rwlock    sync.RWMutex
-	RequestID string `json:"requestId"`
+	rwlock     sync.RWMutex
+	RequestID  string `json:"requestId"`
+	RequestUrl string `json:"requestUrl"`
 }
 
 func (log *LogInfo) SetRequestId() {
 	log.rwlock.Lock()
 	defer log.rwlock.Unlock()
 	log.RequestID = createRequestId()
+}
+
+func (log *LogInfo) SetRequestUrl(url string) {
+	log.rwlock.Lock()
+	defer log.rwlock.Unlock()
+	log.RequestUrl = url
+}
+
+func (log *LogInfo) getRequestUrl() string {
+	log.rwlock.Lock()
+	defer log.rwlock.Unlock()
+	return log.RequestUrl
 }
 
 func (log *LogInfo) GetRequestId() string {
