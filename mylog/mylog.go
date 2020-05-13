@@ -101,6 +101,7 @@ func Error(format string, v ...interface{}) {
 
 func getEncoder() zapcore.Encoder {
 	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.CallerKey = "path"
 	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	return zapcore.NewConsoleEncoder(encoderConfig)
