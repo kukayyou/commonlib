@@ -18,6 +18,7 @@ type CustomClaims struct {
 // Token jwt服务
 var (
 	rwlock     sync.RWMutex
+	ConfigPath string
 	PrivateKey string = "orangetutor"
 )
 
@@ -29,18 +30,23 @@ type UserInfo struct {
 
 //检测jwt私钥是否改变
 func Init(file string) {
-	go func() {
+	ConfigPath = file
+	/*go func() {
 		for {
 			myconfig.LoadConfig(file)
 			key := myconfig.Config.GetString("private_key")
 			put(key)
 			time.Sleep(time.Second * 10)
 		}
-	}()
+	}()*/
 }
 
 //创建token
 func CreateToken(userInfo UserInfo, expireTime int64) (string, error) {
+	myconfig.LoadConfig(ConfigPath)
+	key := myconfig.Config.GetString("private_key")
+	put(key)
+
 	claims := CustomClaims{
 		userInfo,
 		jwt.StandardClaims{
