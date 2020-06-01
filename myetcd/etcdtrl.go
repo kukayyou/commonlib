@@ -1,10 +1,10 @@
 package myetcd
 
 import (
+	"context"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/kukayyou/commonlib/mylog"
 	"time"
-	"context"
 )
 
 func GetKey(etcdAddr string,key string)(value string){
@@ -22,7 +22,7 @@ func GetKey(etcdAddr string,key string)(value string){
 
 	//取值，设置超时为1秒
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	resp, err := cli.Get(ctx, "/logagent/conf/")
+	resp, err := cli.Get(ctx, key)
 	cancel()
 	if err != nil {
 		mylog.Error("get etcd key failed, key:%s, err:%s", key, err.Error())

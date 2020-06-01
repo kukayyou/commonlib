@@ -2,7 +2,7 @@ package token
 
 import (
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/kukayyou/commonlib/myconfig"
+	"github.com/kukayyou/commonlib/myetcd"
 	"sync"
 	"time"
 )
@@ -15,10 +15,15 @@ type CustomClaims struct {
 	jwt.StandardClaims
 }
 
+// CustomClaims 自定义的 metadata在加密后作为 JWT 的第二部分返回给客户端
+type ServerClaims struct {
+	Server string `json:"server"`
+	jwt.StandardClaims
+}
+
 // Token jwt服务
 var (
 	rwlock     sync.RWMutex
-	ConfigPath string
 	PrivateKey string = "orangetutor"
 )
 
@@ -29,24 +34,20 @@ type UserInfo struct {
 }
 
 //检测jwt私钥是否改变
-func Init(file string) {
-	ConfigPath = file
-	/*go func() {
+func Init(opt string) {
+	go func() {
 		for {
-			myconfig.LoadConfig(file)
-			key := myconfig.Config.GetString("private_key")
+			/*myconfig.LoadConfig(file)
+			key := myconfig.Config.GetString("private_key")*/
+			key := myetcd.GetKey(opt, "/go-micor/jwtkey")
 			put(key)
 			time.Sleep(time.Second * 10)
 		}
-	}()*/
+	}()
 }
 
 //创建token
-func CreateToken(userInfo UserInfo, expireTime int64) (string, error) {
-	myconfig.LoadConfig(ConfigPath)
-	key := myconfig.Config.GetString("private_key")
-	put(key)
-
+func CreateUserToken(userInfo UserInfo, expireTime int64) (string, error) {
 	claims := CustomClaims{
 		userInfo,
 		jwt.StandardClaims{
@@ -60,8 +61,23 @@ func CreateToken(userInfo UserInfo, expireTime int64) (string, error) {
 	return jwtToken.SignedString(get())
 }
 
+//创建token
+func CreateServerToken(server string, expireTime int64) (string, error) {
+	claims := ServerClaims{
+		server,
+		jwt.StandardClaims{
+			Issuer:    ISSUSER,
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: expireTime,
+		},
+	}
+
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return jwtToken.SignedString(get())
+}
+
 //检验token
-func CheckToken(tokenStr string) (*CustomClaims, error) {
+func CheckUserToken(tokenStr string) (*CustomClaims, error) {
 	t, err := jwt.ParseWithClaims(tokenStr, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return get(), nil
 	})
@@ -71,6 +87,23 @@ func CheckToken(tokenStr string) (*CustomClaims, error) {
 	}
 	// 解密转换类型并返回
 	if claims, ok := t.Claims.(*CustomClaims); ok && t.Valid {
+		return claims, nil
+	}
+
+	return nil, err
+}
+
+//检验token
+func CheckServerToken(tokenStr string) (*ServerClaims, error) {
+	t, err := jwt.ParseWithClaims(tokenStr, &ServerClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return get(), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	// 解密转换类型并返回
+	if claims, ok := t.Claims.(*ServerClaims); ok && t.Valid {
 		return claims, nil
 	}
 
