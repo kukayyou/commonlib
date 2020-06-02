@@ -39,7 +39,7 @@ func Init(opt string) {
 		for {
 			/*myconfig.LoadConfig(file)
 			key := myconfig.Config.GetString("private_key")*/
-			key := myetcd.GetKey(opt, "/go-micor/jwtkey")
+			key := myetcd.GetKey(opt, "jwtkey")
 			put(key)
 			time.Sleep(time.Second * 10)
 		}
