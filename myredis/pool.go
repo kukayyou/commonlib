@@ -8,18 +8,18 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-type UcRedisClusterConnPool struct {
-	redisChan chan *UcRedisCluster
+type MyRedisClusterConnPool struct {
+	redisChan chan *MyRedisCluster
 }
 
-func NewRedisClusterConnPool(consCount int, clusterAddrs []string) (pool *UcRedisClusterConnPool) {
+func NewRedisClusterConnPool(consCount int, clusterAddrs []string) (pool *MyRedisClusterConnPool) {
 	return NewRedisClusterConnPoolWithPassword(consCount, clusterAddrs, "")
 }
 
 // 扩展方法，支持Redis连接的密码认证
-func NewRedisClusterConnPoolWithPassword(consCount int, clusterAddrs []string, password string) (pool *UcRedisClusterConnPool) {
+func NewRedisClusterConnPoolWithPassword(consCount int, clusterAddrs []string, password string) (pool *MyRedisClusterConnPool) {
 
-	redisChan := make(chan *UcRedisCluster, 10000)
+	redisChan := make(chan *MyRedisCluster, 10000)
 
 	for i := 0; i < consCount; i++ {
 		c := NewUcRedis()
@@ -38,11 +38,11 @@ func NewRedisClusterConnPoolWithPassword(consCount int, clusterAddrs []string, p
 		}
 	}
 
-	pool = &UcRedisClusterConnPool{redisChan: redisChan}
+	pool = &MyRedisClusterConnPool{redisChan: redisChan}
 	return
 }
 
-func (p *UcRedisClusterConnPool) OpenClient() *UcRedisCluster {
+func (p *MyRedisClusterConnPool) OpenClient() *MyRedisCluster {
 	select {
 	case c := <-p.redisChan:
 		return c
@@ -52,7 +52,7 @@ func (p *UcRedisClusterConnPool) OpenClient() *UcRedisCluster {
 	}
 }
 
-func (p *UcRedisClusterConnPool) CloseClient(c *UcRedisCluster) {
+func (p *MyRedisClusterConnPool) CloseClient(c *MyRedisCluster) {
 	select {
 	case p.redisChan <- c:
 	default:
@@ -60,7 +60,7 @@ func (p *UcRedisClusterConnPool) CloseClient(c *UcRedisCluster) {
 	}
 }
 
-func (p *UcRedisClusterConnPool) Do(key string, cmd string, args ...interface{}) (interface{}, error) {
+func (p *MyRedisClusterConnPool) Do(key string, cmd string, args ...interface{}) (interface{}, error) {
 	redisClient := p.OpenClient()
 	if redisClient == nil {
 		return nil, fmt.Errorf("could not get redis client from redis connection pool")
@@ -69,7 +69,7 @@ func (p *UcRedisClusterConnPool) Do(key string, cmd string, args ...interface{})
 	return redisClient.Do(key, cmd, args...)
 }
 
-func (p *UcRedisClusterConnPool) Eval(key string, script *redis.Script, args ...interface{}) (interface{}, error) {
+func (p *MyRedisClusterConnPool) Eval(key string, script *redis.Script, args ...interface{}) (interface{}, error) {
 	redisClient := p.OpenClient()
 	if redisClient == nil {
 		return nil, fmt.Errorf("could not get redis client from redis connection pool")

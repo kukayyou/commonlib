@@ -45,8 +45,8 @@ var (
 		0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0}
 )
 
-func NewUcRedis() *UcRedisCluster {
-	r := UcRedisCluster{}
+func NewUcRedis() *MyRedisCluster {
+	r := MyRedisCluster{}
 	r.addrs = make([]string, 0)
 	r.nodes = make([]ucRedisNode, 0)
 	return &r
@@ -98,38 +98,38 @@ func GetClusterAddress(addrs []string) ([]string, error) {
 }
 
 // 表示cluster
-type UcRedisCluster struct {
+type MyRedisCluster struct {
 	addrs    []string
 	nodes    []ucRedisNode
 	password string
 	pipeCmd  []UcRedisCommand
 }
 
-func (cluster *UcRedisCluster) Nodes() []ucRedisNode {
+func (cluster *MyRedisCluster) Nodes() []ucRedisNode {
 	return cluster.nodes
 }
 
-func (cluster *UcRedisCluster) AddRedisServer(addr string) {
+func (cluster *MyRedisCluster) AddRedisServer(addr string) {
 	cluster.addrs = append(cluster.addrs, addr)
 }
 
-func (cluster *UcRedisCluster) SetPassword(password string) {
+func (cluster *MyRedisCluster) SetPassword(password string) {
 	cluster.password = password
 	mylog.Info("set password: %s", password)
 }
 
-func (cluster *UcRedisCluster) Dial() bool {
+func (cluster *MyRedisCluster) Dial() bool {
 	return cluster.reconnect()
 }
 
-func (cluster *UcRedisCluster) Close() {
+func (cluster *MyRedisCluster) Close() {
 	for _, conns := range cluster.nodes {
 		(*conns.conn).Close()
 	}
 	cluster.nodes = make([]ucRedisNode, 0)
 }
 
-func (cluster *UcRedisCluster) Do(key string, cmd string, args ...interface{}) (r interface{}, err error) {
+func (cluster *MyRedisCluster) Do(key string, cmd string, args ...interface{}) (r interface{}, err error) {
 	r, err = cluster.excute(true, key, cmd, args...)
 	if err != nil {
 		mylog.Error("redis error:%s", err.Error())
@@ -139,15 +139,15 @@ func (cluster *UcRedisCluster) Do(key string, cmd string, args ...interface{}) (
 	return
 }
 
-func (cluster *UcRedisCluster) Send(key string, cmd string, args ...interface{}) error {
+func (cluster *MyRedisCluster) Send(key string, cmd string, args ...interface{}) error {
 	return cluster.send(true, key, cmd, args...)
 }
 
-func (cluster *UcRedisCluster) Eval(key string, script *redis.Script, args ...interface{}) (interface{}, error) {
+func (cluster *MyRedisCluster) Eval(key string, script *redis.Script, args ...interface{}) (interface{}, error) {
 	return cluster.eval(true, key, script, args...)
 }
 
-func (cluster *UcRedisCluster) reconnect() bool {
+func (cluster *MyRedisCluster) reconnect() bool {
 	cluster.Close()
 	var c *redis.Conn
 	for i := 0; i < len(cluster.addrs); i++ {
@@ -182,7 +182,7 @@ func (cluster *UcRedisCluster) reconnect() bool {
 	return cluster.initCluster(c)
 }
 
-func (cluster *UcRedisCluster) initCluster(c *redis.Conn) bool {
+func (cluster *MyRedisCluster) initCluster(c *redis.Conn) bool {
 	cluster.Close()
 
 	reply, err := (*c).Do("cluster", "nodes")
@@ -252,7 +252,7 @@ func (cluster *UcRedisCluster) initCluster(c *redis.Conn) bool {
 	return true
 }
 
-func (cluster *UcRedisCluster) excute(retry bool, key string, cmd string, args ...interface{}) (interface{}, error) {
+func (cluster *MyRedisCluster) excute(retry bool, key string, cmd string, args ...interface{}) (interface{}, error) {
 	node := cluster.getNode(key)
 	if node == nil || (*node).conn == nil {
 		cluster.reconnect()
@@ -272,7 +272,7 @@ func (cluster *UcRedisCluster) excute(retry bool, key string, cmd string, args .
 	return reply, err
 }
 
-func (cluster *UcRedisCluster) send(retry bool, key string, cmd string, args ...interface{}) error {
+func (cluster *MyRedisCluster) send(retry bool, key string, cmd string, args ...interface{}) error {
 	node := cluster.getNode(key)
 	if node == nil || (*node).conn == nil {
 		cluster.reconnect()
@@ -292,7 +292,7 @@ func (cluster *UcRedisCluster) send(retry bool, key string, cmd string, args ...
 	return err
 }
 
-func (cluster *UcRedisCluster) eval(retry bool, key string, script *redis.Script, args ...interface{}) (interface{}, error) {
+func (cluster *MyRedisCluster) eval(retry bool, key string, script *redis.Script, args ...interface{}) (interface{}, error) {
 	node := cluster.getNode(key)
 	if node == nil || (*node).conn == nil {
 		cluster.reconnect()
@@ -312,7 +312,7 @@ func (cluster *UcRedisCluster) eval(retry bool, key string, script *redis.Script
 	return reply, err
 }
 
-func (cluster *UcRedisCluster) hashSlot(key string) uint16 {
+func (cluster *MyRedisCluster) hashSlot(key string) uint16 {
 	crc := uint16(0)
 	for i := 0; i < len(key); i++ {
 		crc = (crc << 8) ^ crc16tab[((crc>>8)^uint16(key[i]))&0x00FF]
@@ -321,7 +321,7 @@ func (cluster *UcRedisCluster) hashSlot(key string) uint16 {
 	return crc % 16384
 }
 
-func (cluster *UcRedisCluster) getNode(key string) *ucRedisNode {
+func (cluster *MyRedisCluster) getNode(key string) *ucRedisNode {
 	slot := cluster.hashSlot(key)
 	for i := 0; i < len(cluster.nodes); i++ {
 		for j := 0; j < len(cluster.nodes[i].slots); j++ {
@@ -336,12 +336,12 @@ func (cluster *UcRedisCluster) getNode(key string) *ucRedisNode {
 }
 
 // support for pipeline
-func (cluster *UcRedisCluster) Pipe(ud interface{}, key string, cmd string, args ...interface{}) {
+func (cluster *MyRedisCluster) Pipe(ud interface{}, key string, cmd string, args ...interface{}) {
 	rcmd := UcRedisCommand{UserData: ud, Key: key, Cmd: cmd, Params: args}
 	cluster.pipeCmd = append(cluster.pipeCmd, rcmd)
 }
 
-func (cluster *UcRedisCluster) Commit() (reply []UcRedisCommand, err error) {
+func (cluster *MyRedisCluster) Commit() (reply []UcRedisCommand, err error) {
 
 	defer func() {
 
@@ -367,7 +367,7 @@ func (cluster *UcRedisCluster) Commit() (reply []UcRedisCommand, err error) {
 	return
 }
 
-func (cluster *UcRedisCluster) commitAll() error {
+func (cluster *MyRedisCluster) commitAll() error {
 
 	var saved_err error = nil
 
@@ -391,7 +391,7 @@ func (cluster *UcRedisCluster) commitAll() error {
 	return saved_err
 }
 
-func (cluster *UcRedisCluster) commitNode(index int) (saved_err error) {
+func (cluster *MyRedisCluster) commitNode(index int) (saved_err error) {
 
 	node := &(cluster.nodes[index])
 	cmdList := node.cmdLst
@@ -427,7 +427,7 @@ func (cluster *UcRedisCluster) commitNode(index int) (saved_err error) {
 	return
 }
 
-func (cluster *UcRedisCluster) dispatchCommand() error {
+func (cluster *MyRedisCluster) dispatchCommand() error {
 	for i := 0; i < len(cluster.pipeCmd); i++ {
 		cmd := &cluster.pipeCmd[i]
 
