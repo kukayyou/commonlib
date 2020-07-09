@@ -15,6 +15,7 @@ require (
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/micro/go-micro v1.18.0
 	github.com/micro/go-plugins v1.5.1
+	go.mongodb.org/mongo-driver v1.3.5
 	go.uber.org/zap v1.12.0
 	golang.org/x/sys v0.0.0-20200116001909-b77594299b42 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
