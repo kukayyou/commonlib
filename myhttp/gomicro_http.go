@@ -23,7 +23,7 @@ var (
 	RegistryType           int    = 0    //0:etcd ,1:consul
 )
 
-func RequestWithHytrix(serverName, url string, req interface{}) string {
+func RequestWithHytrix(serverName, url string, req interface{}) map[string]interface{} {
 	var reg registry.Registry
 	switch RegistryType {
 	case 0:
@@ -53,12 +53,12 @@ func RequestWithHytrix(serverName, url string, req interface{}) string {
 	reqInfo := microClient.NewRequest(serverName, url, req)
 	r, _ := json.Marshal(req)
 	mylog.Info("RegistryType:%d, serverName:%s, url:%s, req:%s", RegistryType, serverName, url, string(r))
-	var resp interface{}
+	var resp map[string]interface{}
 
 	if err := microClient.Call(context.Background(), reqInfo, &resp); err != nil {
 		mylog.Error("request error:%s", err.Error())
-		return ""
+		return nil
 	}
 
-	return resp.(string)
+	return resp
 }
