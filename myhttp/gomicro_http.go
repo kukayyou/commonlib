@@ -53,11 +53,12 @@ func RequestWithHytrix(serverName, url string, req interface{}) []byte {
 	reqInfo := microClient.NewRequest(serverName, url, req)
 	r, _ := json.Marshal(req)
 	mylog.Info("RegistryType:%d, serverName:%s, url:%s, req:%s", RegistryType, serverName, url, string(r))
-	var resp []byte
+	var resp interface{}
 
 	if err := microClient.Call(context.Background(), reqInfo, &resp); err != nil {
 		mylog.Error("request error:%s", err.Error())
 		return nil
 	}
-	return resp
+
+	return resp.([]byte)
 }
