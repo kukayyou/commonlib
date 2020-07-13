@@ -15,7 +15,7 @@ func GetKey(etcdAddr string,key string)(value string){
 		return
 	}
 
-	mylog.Info("connect etcd success")
+	//mylog.Info("connect etcd success")
 	defer cli.Close()
 	kv := clientv3.NewKV(cli)
 
