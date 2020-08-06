@@ -73,7 +73,7 @@ func InitLog(logPath, serverName string, logMaxAge, logMaxSize, logMaxBackUps in
 		core = zapcore.NewCore(encoder, writeSyncer, zapcore.FatalLevel)
 	}
 
-	logger := zap.New(core)
+	logger := zap.New(core, zap.AddCaller())
 	SugarLogger = logger.Sugar()
 }
 
