@@ -114,13 +114,13 @@ func Error(format string, v ...interface{}) {
 
 func getEncoder() zapcore.Encoder {
 	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.NameKey = "name"
-	encoderConfig.CallerKey = "path"
-	encoderConfig.LineEnding = zapcore.DefaultLineEnding
+	//encoderConfig.NameKey = "name"
+	//encoderConfig.CallerKey = "path"
+	//encoderConfig.LineEnding = zapcore.DefaultLineEnding
 	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-	encoderConfig.EncodeName = zapcore.FullNameEncoder
+	//encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+	//encoderConfig.EncodeName = zapcore.FullNameEncoder
 	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
