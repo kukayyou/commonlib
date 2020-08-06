@@ -117,6 +117,7 @@ func getEncoder() zapcore.Encoder {
 	encoderConfig.CallerKey = "path"
 	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	encoderConfig.EncodeCaller = zapcore.FullCallerEncoder
 	return zapcore.NewConsoleEncoder(encoderConfig)
 }
 
