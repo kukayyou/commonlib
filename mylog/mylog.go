@@ -111,13 +111,16 @@ func Error(format string, v ...interface{}) {
 	logInfo := fmt.Sprintf(format, v...)
 	SugarLogger.Fatal(msg, logInfo)
 }*/
+func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
+}
 
 func getEncoder() zapcore.Encoder {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	//encoderConfig.NameKey = "name"
 	//encoderConfig.CallerKey = "path"
 	//encoderConfig.LineEnding = zapcore.DefaultLineEnding
-	encoderConfig.EncodeTime = zapcore.EpochMillisTimeEncoder
+	encoderConfig.EncodeTime = timeEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	//encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 	//encoderConfig.EncodeName = zapcore.FullNameEncoder
