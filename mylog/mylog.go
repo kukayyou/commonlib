@@ -117,7 +117,7 @@ func getEncoder() zapcore.Encoder {
 	//encoderConfig.NameKey = "name"
 	//encoderConfig.CallerKey = "path"
 	//encoderConfig.LineEnding = zapcore.DefaultLineEnding
-	encoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	encoderConfig.EncodeTime = zapcore.EpochMillisTimeEncoder
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	//encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
 	//encoderConfig.EncodeName = zapcore.FullNameEncoder
