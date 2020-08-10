@@ -2,6 +2,7 @@ package mylog
 
 import (
 	"fmt"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -21,32 +22,33 @@ var (
 
 type LogInfo struct {
 	rwlock     sync.RWMutex
-	RequestID  string `json:"requestId"`
-	RequestUrl string `json:"requestUrl"`
+	RequestID  *atomic.String `json:"requestId"`
+	RequestUrl *atomic.String `json:"requestUrl"`
 }
 
 func (log *LogInfo) SetRequestId() {
-	log.rwlock.Lock()
+	log.RequestID = atomic.NewString(createRequestId())
+	/*log.rwlock.Lock()
 	defer log.rwlock.Unlock()
-	log.RequestID = createRequestId()
+	log.RequestID = createRequestId()*/
 }
 
 func (log *LogInfo) SetRequestUrl(url string) {
-	log.rwlock.Lock()
-	defer log.rwlock.Unlock()
-	log.RequestUrl = url
+	/*log.rwlock.Lock()
+	defer log.rwlock.Unlock()*/
+	log.RequestUrl = atomic.NewString(url)
 }
 
 func (log *LogInfo) GetRequestUrl() string {
-	log.rwlock.Lock()
-	defer log.rwlock.Unlock()
-	return log.RequestUrl
+	/*log.rwlock.Lock()
+	defer log.rwlock.Unlock()*/
+	return log.RequestUrl.Load()
 }
 
 func (log *LogInfo) GetRequestId() string {
-	log.rwlock.Lock()
-	defer log.rwlock.Unlock()
-	return log.RequestID
+	/*log.rwlock.Lock()
+	defer log.rwlock.Unlock()*/
+	return log.RequestID.Load()
 }
 
 /*
